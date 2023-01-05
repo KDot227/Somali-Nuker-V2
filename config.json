@@ -1,11 +1,11 @@
 {
-    "TOKEN": "YOUR TOKEN OR BOT TOKEN HERE",
-    "PROXIES": false,
+    "TOKEN": "Token here",
+    "PROXIES": true, 
     "SPAM_PRN": true,
-    "SERVER_NAME": "KDot better",
-    "AMMOUNT_OF_CHANNELS": 15,
-    "MESSAGES_PER_CHANNEL": 25,
-    "PREFIX": "god ",
-    "MESSAGE": "@everyone K.Dot#0001 was here! ",
-    "CHANNEL_NAMES": "K.Dot"
+    "WEBHOOK_NAME": "Webhook name",
+    "AMMOUNT_OF_CHANNELS": 20,
+    "MESSAGES_PER_CHANNEL": 40,
+    "PREFIX": "Prefix",
+    "MESSAGE": "Message here",
+    "CHANNEL_NAMES": "Channel name"
     }
