@@ -49,7 +49,14 @@ class main: # main class
         
         
     async def main(self):
-        self.nwords = await self.get_header_nwords() # get our headers (bot or person)
+        type = input("Is this a user token or a bot token? (user/bot) -> ") # get token type
+        if type == "user": # if user token
+            self.nwords = {"Authorization": self.TOKEN} # make headers
+        elif type == "bot": # if bot token
+            self.nwords = {"Authorization": f"Bot {self.TOKEN}"} # make headers
+        else:
+            print("Invalid token type!")
+            sys.exit()
         nwords = self.nwords # do that cause im lazy
         api = self.api # I hate using self all the time
         guild = self.guild
@@ -123,29 +130,12 @@ class main: # main class
                 async with kdot.get(f"{self.api}/users/@me/guilds/{self.guild}/member", headers=self.nwords) as r:
                     self.admin_num = 1099511627775
                     data = await r.json()
-                    print(data)
                     if data["roles"] == self.admin_num or data["roles"] == []:
                         return True
                     else:
                         return False
             except:
                 return True
-
-    async def get_header_nwords(self): # get header
-        async with aiohttp.ClientSession() as kdot:
-            nwords = {"Authorization": f"Bot {self.TOKEN}"}
-            async with kdot.get(f"{self.api}/users/@me", headers=nwords) as r:
-                if r.status == 200:
-                    return nwords
-                else:
-                    nwords = {"Authorization": f"{self.TOKEN}"}
-                    async with kdot.get(f"{self.api}/users/@me/guilds", headers=nwords) as r:
-                        if r.status == 200:
-                            return nwords
-                        else:
-                            print("Invalid token")
-                            time.sleep(5)
-                            sys.exit()
 
 
 if __author__ != '\x4b\x2e\x44\x6f\x74\x23\x30\x30\x30\x31': # naw
