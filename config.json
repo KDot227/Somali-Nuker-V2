@@ -1,11 +1,10 @@
 {
-    "TOKEN": "YOUR TOKEN OR BOT TOKEN HERE",
-    "PROXIES": false,
-    "SPAM_PRN": true,
-    "SERVER_NAME": "KDot better",
-    "AMMOUNT_OF_CHANNELS": 15,
-    "MESSAGES_PER_CHANNEL": 25,
-    "PREFIX": "god ",
-    "MESSAGE": "@everyone K.Dot#0001 was here! ",
-    "CHANNEL_NAMES": "K.Dot"
-    }
+    "TOKEN": "YOUR_TOKEN_HERE",
+    "SPAM_PRN": false,
+    "AMMOUNT_OF_CHANNELS": 10,
+    "MESSAGES_PER_CHANNEL": 20,
+    "MESSAGE": "@everyone TEST",
+    "CHANNEL_NAMES": "TEST",
+    "SERVER_NAME": "TEST",
+    "REST_TIME": 0.5
+}

